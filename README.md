@@ -1,6 +1,8 @@
 # NBA Match Tracker Dashboard
 
-An interactive, visually polished dashboard for exploring recent NBA games. Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, and **Recharts** and powered by the public **balldontlie** NBA data API.
+Wanted to build something clean with TypeScript and Tailwind, so I put together this NBA tracker. It hits the balldontlie API for game data and renders everything through Recharts. It’s basically a high-performance React playground for keeping tabs on the league.
+
+Here's an interactive, visually polished dashboard for exploring recent NBA games. Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, and **Recharts** and powered by the public **balldontlie** NBA data API.
 
 ## Features
 
