@@ -43,11 +43,13 @@ export interface GamesFilter {
   teamIds?: number[]
   seasons?: number[]
   perPage?: number
+  page?: number
 }
 
 export async function fetchGames(filter: GamesFilter): Promise<PagedResponse<Game>> {
   const params: Record<string, string | number | (string | number)[]> = {
     per_page: filter.perPage ?? 50,
+    page: filter.page ?? 1,
   }
 
   if (filter.dates?.length) params.dates = filter.dates
@@ -56,4 +58,23 @@ export async function fetchGames(filter: GamesFilter): Promise<PagedResponse<Gam
 
   const { data } = await api.get<PagedResponse<Game>>('/games', { params })
   return data
+}
+
+const MAX_PAGES = 20
+
+/**
+ * Follows `meta.next_page` until exhausted so callers get the full result
+ * set for a filter instead of just the first page.
+ */
+export async function fetchAllGames(filter: GamesFilter): Promise<Game[]> {
+  const games: Game[] = []
+  let page: number | null = filter.page ?? 1
+
+  for (let i = 0; i < MAX_PAGES && page !== null; i++) {
+    const response = await fetchGames({ ...filter, page })
+    games.push(...response.data)
+    page = response.meta.next_page
+  }
+
+  return games
 }
