@@ -3,9 +3,10 @@ import type { Game } from '../api/nbaApi'
 
 interface GameTrendsChartProps {
   games: Game[]
+  loading?: boolean
 }
 
-export function GameTrendsChart({ games }: GameTrendsChartProps) {
+export function GameTrendsChart({ games, loading = false }: GameTrendsChartProps) {
   if (!games.length) return null
 
   const data = games
@@ -22,12 +23,18 @@ export function GameTrendsChart({ games }: GameTrendsChartProps) {
     .sort((a, b) => (a.date > b.date ? 1 : -1))
 
   return (
-    <section className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-card backdrop-blur">
+    <section
+      aria-busy={loading}
+      className={`mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-card backdrop-blur transition-opacity duration-200 ${
+        loading ? 'opacity-50' : 'opacity-100'
+      }`}
+    >
       <header className="mb-3 flex items-center justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold tracking-tight text-slate-100">Scoring & margin trends</h2>
           <p className="text-xs text-slate-500">Hover to inspect each game&apos;s scoring profile.</p>
         </div>
+        {loading && <span className="text-[10px] uppercase tracking-wide text-slate-500">Refreshing…</span>}
       </header>
 
       <div className="h-64">

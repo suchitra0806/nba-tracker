@@ -2,9 +2,10 @@ import type { Game } from '../api/nbaApi'
 
 interface StatsSummaryProps {
   games: Game[]
+  loading?: boolean
 }
 
-export function StatsSummary({ games }: StatsSummaryProps) {
+export function StatsSummary({ games, loading = false }: StatsSummaryProps) {
   if (!games.length) return null
 
   const totals = games.reduce(
@@ -62,7 +63,15 @@ export function StatsSummary({ games }: StatsSummaryProps) {
   ]
 
   return (
-    <section className="mb-4 grid gap-3 sm:grid-cols-3 md:grid-cols-5">
+    <section
+      aria-busy={loading}
+      className={`mb-4 grid gap-3 transition-opacity duration-200 sm:grid-cols-3 md:grid-cols-5 ${
+        loading ? 'opacity-50' : 'opacity-100'
+      }`}
+    >
+      {loading && (
+        <p className="col-span-full text-[10px] uppercase tracking-wide text-slate-500">Refreshing…</p>
+      )}
       {metrics.map((metric) => (
         <article
           key={metric.label}
