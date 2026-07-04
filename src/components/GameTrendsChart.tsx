@@ -72,10 +72,10 @@ export function GameTrendsChart({ games }: GameTrendsChartProps) {
                 fontSize: 11,
               }}
               labelStyle={{ color: '#e2e8f0', fontWeight: 600, marginBottom: 4 }}
-              formatter={(value: unknown, name: string) => {
+              formatter={(value: unknown, name: string | undefined) => {
                 if (name === 'total') return [`${value} pts`, 'Total points']
                 if (name === 'margin') return [`${value} pts`, 'Margin']
-                return [String(value), name]
+                return [String(value), name ?? '']
               }}
             />
             <Area
