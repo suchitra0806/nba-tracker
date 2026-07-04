@@ -46,7 +46,10 @@ export interface GamesFilter {
   page?: number
 }
 
-export async function fetchGames(filter: GamesFilter): Promise<PagedResponse<Game>> {
+export async function fetchGames(
+  filter: GamesFilter,
+  options?: { signal?: AbortSignal },
+): Promise<PagedResponse<Game>> {
   const params: Record<string, string | number | (string | number)[]> = {
     per_page: filter.perPage ?? 50,
     page: filter.page ?? 1,
@@ -56,7 +59,10 @@ export async function fetchGames(filter: GamesFilter): Promise<PagedResponse<Gam
   if (filter.seasons?.length) params.seasons = filter.seasons
   if (filter.teamIds?.length) params['team_ids[]'] = filter.teamIds.map(String)
 
-  const { data } = await api.get<PagedResponse<Game>>('/games', { params })
+  const { data } = await api.get<PagedResponse<Game>>('/games', {
+    params,
+    signal: options?.signal,
+  })
   return data
 }
 
@@ -66,12 +72,15 @@ const MAX_PAGES = 20
  * Follows `meta.next_page` until exhausted so callers get the full result
  * set for a filter instead of just the first page.
  */
-export async function fetchAllGames(filter: GamesFilter): Promise<Game[]> {
+export async function fetchAllGames(
+  filter: GamesFilter,
+  options?: { signal?: AbortSignal },
+): Promise<Game[]> {
   const games: Game[] = []
   let page: number | null = filter.page ?? 1
 
   for (let i = 0; i < MAX_PAGES && page !== null; i++) {
-    const response = await fetchGames({ ...filter, page })
+    const response = await fetchGames({ ...filter, page }, options)
     games.push(...response.data)
     page = response.meta.next_page
   }

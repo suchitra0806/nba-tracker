@@ -40,6 +40,8 @@ function App() {
   }, [filters.season, filters.daysBack])
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function load() {
       setLoading(true)
       setError(null)
@@ -59,18 +61,27 @@ function App() {
 
         const cached = cacheRef.current.get(cacheKey)
         if (cached) {
-          setGames(cached)
+          if (!controller.signal.aborted) setGames(cached)
           return
         }
 
-        const allGames = await fetchAllGames({
-          dates,
-          seasons: [requestParams.season],
-          perPage: 100,
-        })
+        const allGames = await fetchAllGames(
+          {
+            dates,
+            seasons: [requestParams.season],
+            perPage: 100,
+          },
+          { signal: controller.signal },
+        )
+
+        // A newer request may have superseded this one while we were awaiting.
+        if (controller.signal.aborted) return
+
         setGames(allGames)
         cacheRef.current.set(cacheKey, allGames)
       } catch (err) {
+        if (controller.signal.aborted) return
+
         console.error(err)
 
         if (axios.isAxiosError(err)) {
@@ -89,11 +100,13 @@ function App() {
           setError('Something unexpected went wrong while loading games.')
         }
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) setLoading(false)
       }
     }
 
     load()
+
+    return () => controller.abort()
   }, [requestParams.daysBack, requestParams.season])
 
   const filteredGames = useMemo(() => {
