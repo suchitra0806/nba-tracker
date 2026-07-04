@@ -5,7 +5,7 @@ import { Filters, type FiltersState } from './components/Filters'
 import { GameTable } from './components/GameTable'
 import { StatsSummary } from './components/StatsSummary'
 import { GameTrendsChart } from './components/GameTrendsChart'
-import { fetchGames, type Game } from './api/nbaApi'
+import { fetchAllGames, type Game } from './api/nbaApi'
 
 const DEFAULT_FILTERS: FiltersState = {
   season: new Date().getFullYear(),
@@ -65,11 +65,11 @@ function App() {
           return
         }
 
-        const response = await fetchGames(
+        const allGames = await fetchAllGames(
           {
             dates,
             seasons: [requestParams.season],
-            perPage: 80,
+            perPage: 100,
           },
           { signal: controller.signal },
         )
@@ -77,8 +77,8 @@ function App() {
         // A newer request may have superseded this one while we were awaiting.
         if (controller.signal.aborted) return
 
-        setGames(response.data)
-        cacheRef.current.set(cacheKey, response.data)
+        setGames(allGames)
+        cacheRef.current.set(cacheKey, allGames)
       } catch (err) {
         if (controller.signal.aborted) return
 

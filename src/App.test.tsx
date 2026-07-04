@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import App from './App'
-import { fetchGames, type Game, type PagedResponse } from './api/nbaApi'
+import { fetchAllGames, type Game } from './api/nbaApi'
 
 vi.mock('./api/nbaApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./api/nbaApi')>()
-  return { ...actual, fetchGames: vi.fn() }
+  return { ...actual, fetchAllGames: vi.fn() }
 })
 
-const mockedFetchGames = vi.mocked(fetchGames)
+const mockedFetchAllGames = vi.mocked(fetchAllGames)
 
 function makeGame(id: number, homeScore: number, visitorScore: number): Game {
   return {
@@ -22,17 +22,10 @@ function makeGame(id: number, homeScore: number, visitorScore: number): Game {
   }
 }
 
-function page(data: Game[]): PagedResponse<Game> {
-  return {
-    data,
-    meta: { total_pages: 1, current_page: 1, next_page: null, per_page: data.length, total_count: data.length },
-  }
-}
-
 describe('App request race handling', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    mockedFetchGames.mockReset()
+    mockedFetchAllGames.mockReset()
   })
 
   afterEach(() => {
@@ -40,17 +33,17 @@ describe('App request race handling', () => {
   })
 
   it('keeps the latest request result even when an older request resolves after it', async () => {
-    let resolveStale!: (value: PagedResponse<Game>) => void
-    let resolveFresh!: (value: PagedResponse<Game>) => void
+    let resolveStale!: (value: Game[]) => void
+    let resolveFresh!: (value: Game[]) => void
 
-    const stalePromise = new Promise<PagedResponse<Game>>((resolve) => {
+    const stalePromise = new Promise<Game[]>((resolve) => {
       resolveStale = resolve
     })
-    const freshPromise = new Promise<PagedResponse<Game>>((resolve) => {
+    const freshPromise = new Promise<Game[]>((resolve) => {
       resolveFresh = resolve
     })
 
-    mockedFetchGames.mockReturnValueOnce(stalePromise).mockReturnValueOnce(freshPromise)
+    mockedFetchAllGames.mockReturnValueOnce(stalePromise).mockReturnValueOnce(freshPromise)
 
     render(<App />)
 
@@ -58,22 +51,22 @@ describe('App request race handling', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500)
     })
-    expect(mockedFetchGames).toHaveBeenCalledTimes(1)
+    expect(mockedFetchAllGames).toHaveBeenCalledTimes(1)
 
     // Trigger a second ("fresh") request before the first resolves.
     fireEvent.click(screen.getByRole('button', { name: 'Last 14 days' }))
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500)
     })
-    expect(mockedFetchGames).toHaveBeenCalledTimes(2)
+    expect(mockedFetchAllGames).toHaveBeenCalledTimes(2)
 
     // Resolve out of arrival order: fresh first, stale after.
     await act(async () => {
-      resolveFresh(page([makeGame(2, 132, 90)]))
+      resolveFresh([makeGame(2, 132, 90)])
       await vi.advanceTimersByTimeAsync(0)
     })
     await act(async () => {
-      resolveStale(page([makeGame(1, 61, 58)]))
+      resolveStale([makeGame(1, 61, 58)])
       await vi.advanceTimersByTimeAsync(0)
     })
 
