@@ -45,7 +45,10 @@ export interface GamesFilter {
   perPage?: number
 }
 
-export async function fetchGames(filter: GamesFilter): Promise<PagedResponse<Game>> {
+export async function fetchGames(
+  filter: GamesFilter,
+  options?: { signal?: AbortSignal },
+): Promise<PagedResponse<Game>> {
   const params: Record<string, string | number | (string | number)[]> = {
     per_page: filter.perPage ?? 50,
   }
@@ -54,6 +57,9 @@ export async function fetchGames(filter: GamesFilter): Promise<PagedResponse<Gam
   if (filter.seasons?.length) params.seasons = filter.seasons
   if (filter.teamIds?.length) params['team_ids[]'] = filter.teamIds.map(String)
 
-  const { data } = await api.get<PagedResponse<Game>>('/games', { params })
+  const { data } = await api.get<PagedResponse<Game>>('/games', {
+    params,
+    signal: options?.signal,
+  })
   return data
 }
