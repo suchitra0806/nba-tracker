@@ -136,8 +136,8 @@ function App() {
         </div>
       )}
 
-      <StatsSummary games={filteredGames} />
-      <GameTrendsChart games={filteredGames} />
+      <StatsSummary games={filteredGames} loading={loading} />
+      <GameTrendsChart games={filteredGames} loading={loading} />
       <GameTable games={filteredGames} loading={loading} />
     </Layout>
   )
